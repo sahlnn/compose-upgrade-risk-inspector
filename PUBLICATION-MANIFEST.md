@@ -14,6 +14,7 @@ What this public repository contains, and what was deliberately left out of it. 
 | Tooling | `tools/` | Scoring, baseline, fixture validation, fixture split, mutation check (the mutation copy list now includes `examples/`) |
 | Examples | `examples/01-…`, `02-…`, `03-…` | Synthetic inputs (including `.env` files with placeholder values), saved terminal and JSON reports, explanations |
 | Documentation | `README.md`, `EVIDENCE.md`, `CHANGELOG.md`, `docs/` | English; `EVIDENCE.md` stays at the root because tests and tools parse its source table |
+| Turkish companion README | `README.tr.md` | Concise Turkish overview; the English `README.md` and `docs/` remain the primary, complete documentation |
 | Snapshot hashes | `docs/source-snapshots-sha256.txt` | SHA-256 values of the author's local source snapshots, for reference only; the snapshots themselves are not included |
 | Package metadata | `package.json`, `package-lock.json` | Version `0.2.2`, `"private": true`, license `MIT`; one locked dependency (`yaml@2.9.1`, ISC) |
 | Repository files | `LICENSE`, `.gitignore`, `.gitattributes`, `.github/workflows/ci.yml` | |

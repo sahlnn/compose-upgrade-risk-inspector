@@ -1,5 +1,7 @@
 # Compose Upgrade Risk Inspector (for Immich)
 
+**English** | [Türkçe](README.tr.md)
+
 An offline, read-only command-line tool that reads an [Immich](https://immich.app) Docker Compose project and reports which documented changes an upgrade from one Immich version to another **requires**, **recommends**, or **cannot decide** from the given files. Every finding cites the official source it is based on.
 
 > **Status: research / portfolio prototype, v0.2.2 pre-release.**
