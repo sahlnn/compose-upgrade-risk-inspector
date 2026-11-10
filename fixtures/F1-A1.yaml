@@ -1,0 +1,71 @@
+id: F1-A1
+family: F1
+current_version: v1.118.2
+target_version: v1.119.0
+expected_label: ACTION_REQUIRED
+evidence: [E03]
+evidence_strength: strong
+rationale: >
+  v1.119.0 removed IMMICH_METRICS and IMMICH_HOST_METRICS (and the other *_METRICS vars).
+  This .env sets both, so the user relies on the Prometheus endpoint. The release note
+  gives this exact replacement: IMMICH_TELEMETRY_INCLUDE=all + IMMICH_TELEMETRY_EXCLUDE=host.
+expected_actions:
+  - "Replace IMMICH_METRICS=true / IMMICH_HOST_METRICS=false with IMMICH_TELEMETRY_INCLUDE=all and IMMICH_TELEMETRY_EXCLUDE=host"
+missing_inputs: []
+# Full-report answer key (Phase 1.1, findings added in 1.2): all six families, every finding with its rule,
+# label, services and UNKNOWN reason, every certain action key and the upgrade path. Authored from the
+# sources, then diffed against the engine (0 diffs). Evidence/remediation per rule: test/golden/rules.yaml.
+expected_report:
+  families:
+    F1: ACTION_REQUIRED
+    F2: NOT_APPLICABLE
+    F3: NOT_APPLICABLE
+    F4: NOT_APPLICABLE
+    F5: NOT_APPLICABLE
+    F6: NOT_APPLICABLE
+  action_keys:
+    - env.replace:IMMICH_METRICS
+  upgrade_path:
+    status: NO_KNOWN_STOP
+    stops: []
+    advisory_stops: []
+    open_risks: []
+  missing_tokens: []
+  unknown_rules: []
+  config_details: []
+  findings:
+    - rule: F1-119-metrics-removed
+      label: ACTION_REQUIRED
+      services:
+        - immich-server
+files:
+  docker-compose.yml: |
+    name: immich
+    services:
+      immich-server:
+        container_name: immich_server
+        image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+        volumes:
+          - ${UPLOAD_LOCATION}:/usr/src/app/upload
+          - /etc/localtime:/etc/localtime:ro
+        env_file:
+          - .env
+        ports:
+          - '2283:2283'
+          - '8081:8081'
+        depends_on: [redis, database]
+        restart: always
+      redis:
+        image: docker.io/redis:6.2-alpine
+      database:
+        image: docker.io/tensorchord/pgvecto-rs:pg14-v0.2.0
+  .env: |
+    # SYNTHETIC - not a real deployment
+    UPLOAD_LOCATION=./library
+    DB_DATA_LOCATION=./postgres
+    IMMICH_VERSION=v1.118.2
+    DB_PASSWORD=synthetic-placeholder
+    DB_USERNAME=postgres
+    DB_DATABASE_NAME=immich
+    IMMICH_METRICS=true
+    IMMICH_HOST_METRICS=false

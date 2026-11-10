@@ -1,0 +1,30 @@
+Compose Upgrade Risk Inspector  (offline, read-only; no files are changed)
+Upgrade : v2.7.5 -> v3.0.0
+Result  : UNKNOWN
+          At least one supported check could not be decided from the given inputs. This is not a pass.
+Read    : docker-compose.yml, .env
+Note    : database service not determined: database host 'db.example.internal' is not a service in this compose (external database?)
+Path    : NO_KNOWN_STOP: v2.7.5 -> v3.0.0
+
+F1 Environment variables....... NOT_APPLICABLE
+F2 Service architecture........ NOT_APPLICABLE
+F3 Direct-upgrade floor........ NOT_APPLICABLE
+F4 Intermediate migration...... NOT_APPLICABLE
+F5 PostgreSQL / VectorChord.... UNKNOWN
+   ?? [UNKNOWN] F5-300-no-supported-extension
+      action : Cannot decide without the missing inputs. If it applies: Back up the database, then replace the tensorchord/pgvecto-rs image with a ghcr.io/immich-app/postgres image that matches the PostgreSQL major version and pgvecto.rs version of the current image (they could not be read here: verify both in your compose file), and remove the legacy command/healthcheck overrides.
+      missing: database host 'db.example.internal' is not a service in this compose (external database?)
+      source : E10 <https://github.com/immich-app/immich/releases/tag/v3.0.0> (tag v3.0.0)
+      source : E12 <https://github.com/immich-app/immich/pull/28159> (merge 97c62136)
+      source : E08 <https://docs.immich.app/install/upgrading#migrating-to-vectorchord> (docs/docs/install/upgrading.md @ 87ef8950)
+F6 pgvecto.rs removal.......... UNKNOWN
+   ?? [UNKNOWN] F6-300-legacy-vectors-command
+      action : Cannot decide without the missing inputs. If it applies: Remove the legacy `command:` override (vectors.so) from the database service.
+      missing: database host 'db.example.internal' is not a service in this compose (external database?)
+      source : E04 <https://github.com/immich-app/immich/releases/tag/v1.133.0> (tag v1.133.0)
+      source : E08 <https://docs.immich.app/install/upgrading#migrating-to-vectorchord> (docs/docs/install/upgrading.md @ 87ef8950)
+
+Summary : ACTION_REQUIRED 0 | UNKNOWN 2 (F5,F6) | ADVISORY 0 | NOT_APPLICABLE 4 (F1,F2,F3,F4)
+UNKNOWN means the given inputs cannot decide the question. It is not a pass.
+Coverage: families F1, F2, F3, F4, F5, F6. NOT_APPLICABLE: with complete inputs, no supported rule of that family matched. It is not a safety verdict.
+          Changes outside these six families (API, mobile app, hardware/CPU requirements, admin settings, data migrations) are not checked.

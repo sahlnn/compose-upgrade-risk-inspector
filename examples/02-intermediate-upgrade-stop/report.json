@@ -1,0 +1,184 @@
+{
+  "tool": "compose-upgrade-risk-inspector",
+  "schema": 3,
+  "request": {
+    "current": "v1.131.3",
+    "target": "v1.137.0"
+  },
+  "inputs": {
+    "compose": "docker-compose.yml",
+    "files_read": [
+      "docker-compose.yml",
+      ".env"
+    ],
+    "missing": [],
+    "unsupported": [],
+    "notes": [
+      "database service: database (host 'database' from DB_HOSTNAME default)"
+    ]
+  },
+  "assessment": {
+    "status": "ACTION_REQUIRED",
+    "meaning": "At least one supported rule requires a change or an intermediate upgrade before this upgrade."
+  },
+  "coverage": {
+    "families": [
+      "F1",
+      "F2",
+      "F3",
+      "F4",
+      "F5",
+      "F6"
+    ],
+    "not_applicable_means": "NOT_APPLICABLE: with complete inputs, no supported rule of that family matched. It is not a safety verdict.",
+    "not_covered": "Changes outside these six families (API, mobile app, hardware/CPU requirements, admin settings, data migrations) are not checked."
+  },
+  "upgrade_path": {
+    "status": "INTERMEDIATE_REQUIRED",
+    "stops": [
+      {
+        "version": "v1.132.3",
+        "required_by": [
+          "F4-typeorm-boot"
+        ]
+      }
+    ],
+    "advisory_stops": [],
+    "open_risks": []
+  },
+  "families": {
+    "F1": {
+      "name": "Environment variables",
+      "label": "NOT_APPLICABLE",
+      "findings": []
+    },
+    "F2": {
+      "name": "Service architecture",
+      "label": "NOT_APPLICABLE",
+      "findings": []
+    },
+    "F3": {
+      "name": "Direct-upgrade floor",
+      "label": "NOT_APPLICABLE",
+      "findings": []
+    },
+    "F4": {
+      "name": "Intermediate migration",
+      "label": "ACTION_REQUIRED",
+      "findings": [
+        {
+          "rule_id": "F4-typeorm-boot",
+          "family": "F4",
+          "label": "ACTION_REQUIRED",
+          "action_key": "path.stop:v1.132.3",
+          "remediation": {
+            "op": "upgrade_via",
+            "subjects": [],
+            "replacements": [
+              "v1.132.3"
+            ]
+          },
+          "action": "Upgrade to v1.132.3 first and confirm Immich starts successfully.",
+          "evidence": [
+            {
+              "id": "E06",
+              "url": "https://github.com/immich-app/immich/releases/tag/v1.137.0",
+              "revision": "tag v1.137.0"
+            },
+            {
+              "id": "E07",
+              "url": "https://docs.immich.app/errors#typeorm-upgrade",
+              "revision": "docs/src/pages/errors.md @ 87ef8950"
+            }
+          ],
+          "config": [
+            {
+              "field": "request.current",
+              "value": "v1.131.3"
+            }
+          ],
+          "missing_inputs": []
+        }
+      ]
+    },
+    "F5": {
+      "name": "PostgreSQL / VectorChord",
+      "label": "ADVISORY",
+      "findings": [
+        {
+          "rule_id": "F5-2x-switch-image",
+          "family": "F5",
+          "label": "ADVISORY",
+          "action_key": "db.migrate-to-vectorchord",
+          "remediation": {
+            "op": "replace_db_image",
+            "subjects": [
+              "tensorchord/pgvecto-rs"
+            ],
+            "replacements": [
+              "ghcr.io/immich-app/postgres"
+            ],
+            "backup": true,
+            "before": "v3.0.0"
+          },
+          "action": "Before upgrading to v3.0.0: back up the database, then replace the tensorchord/pgvecto-rs image with ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0 (documented for PostgreSQL 14 with pgvecto.rs 0.2.0; keep the PostgreSQL major version), and remove the legacy command/healthcheck overrides.",
+          "evidence": [
+            {
+              "id": "E04",
+              "url": "https://github.com/immich-app/immich/releases/tag/v1.133.0",
+              "revision": "tag v1.133.0"
+            },
+            {
+              "id": "E22",
+              "url": "https://github.com/immich-app/immich/blob/v2.7.5/server/src/services/database.service.ts",
+              "revision": "tags v2.0.0 and v2.7.5"
+            },
+            {
+              "id": "E08",
+              "url": "https://docs.immich.app/install/upgrading#migrating-to-vectorchord",
+              "revision": "docs/docs/install/upgrading.md @ 87ef8950"
+            }
+          ],
+          "config": [
+            {
+              "service": "database",
+              "field": "database host",
+              "value": "'database'",
+              "source": "DB_HOSTNAME default"
+            },
+            {
+              "service": "database",
+              "field": "image",
+              "value": "docker.io/tensorchord/pgvecto-rs",
+              "detail": "PostgreSQL 14, pgvecto.rs 0.2.0",
+              "source": "docker-compose.yml:35",
+              "pg_major": "14",
+              "pgvecto_rs": "0.2.0"
+            }
+          ],
+          "missing_inputs": []
+        }
+      ]
+    },
+    "F6": {
+      "name": "pgvecto.rs removal",
+      "label": "NOT_APPLICABLE",
+      "findings": []
+    }
+  },
+  "summary": {
+    "ACTION_REQUIRED": [
+      "F4"
+    ],
+    "UNKNOWN": [],
+    "ADVISORY": [
+      "F5"
+    ],
+    "NOT_APPLICABLE": [
+      "F1",
+      "F2",
+      "F3",
+      "F6"
+    ]
+  }
+}

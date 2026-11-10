@@ -1,0 +1,30 @@
+Compose Upgrade Risk Inspector  (offline, read-only; no files are changed)
+Upgrade : v1.131.3 -> v1.137.0
+Result  : ACTION_REQUIRED
+          At least one supported rule requires a change or an intermediate upgrade before this upgrade.
+Read    : docker-compose.yml, .env
+Note    : database service: database (host 'database' from DB_HOSTNAME default)
+Path    : INTERMEDIATE_REQUIRED: v1.131.3 -> v1.132.3 [F4-typeorm-boot] -> v1.137.0
+
+F1 Environment variables....... NOT_APPLICABLE
+F2 Service architecture........ NOT_APPLICABLE
+F3 Direct-upgrade floor........ NOT_APPLICABLE
+F4 Intermediate migration...... ACTION_REQUIRED
+   !! [ACTION_REQUIRED] F4-typeorm-boot
+      action : Upgrade to v1.132.3 first and confirm Immich starts successfully.
+      config : request.current = v1.131.3
+      source : E06 <https://github.com/immich-app/immich/releases/tag/v1.137.0> (tag v1.137.0)
+      source : E07 <https://docs.immich.app/errors#typeorm-upgrade> (docs/src/pages/errors.md @ 87ef8950)
+F5 PostgreSQL / VectorChord.... ADVISORY
+   -> [ADVISORY] F5-2x-switch-image
+      action : Before upgrading to v3.0.0: back up the database, then replace the tensorchord/pgvecto-rs image with ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0 (documented for PostgreSQL 14 with pgvecto.rs 0.2.0; keep the PostgreSQL major version), and remove the legacy command/healthcheck overrides.
+      config : database.database host = 'database'  (DB_HOSTNAME default)
+      config : database.image = docker.io/tensorchord/pgvecto-rs [PostgreSQL 14, pgvecto.rs 0.2.0]  (docker-compose.yml:35)
+      source : E04 <https://github.com/immich-app/immich/releases/tag/v1.133.0> (tag v1.133.0)
+      source : E22 <https://github.com/immich-app/immich/blob/v2.7.5/server/src/services/database.service.ts> (tags v2.0.0 and v2.7.5)
+      source : E08 <https://docs.immich.app/install/upgrading#migrating-to-vectorchord> (docs/docs/install/upgrading.md @ 87ef8950)
+F6 pgvecto.rs removal.......... NOT_APPLICABLE
+
+Summary : ACTION_REQUIRED 1 (F4) | UNKNOWN 0 | ADVISORY 1 (F5) | NOT_APPLICABLE 4 (F1,F2,F3,F6)
+Coverage: families F1, F2, F3, F4, F5, F6. NOT_APPLICABLE: with complete inputs, no supported rule of that family matched. It is not a safety verdict.
+          Changes outside these six families (API, mobile app, hardware/CPU requirements, admin settings, data migrations) are not checked.

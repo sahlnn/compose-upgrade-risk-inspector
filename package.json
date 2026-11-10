@@ -1,0 +1,25 @@
+{
+  "name": "compose-upgrade-risk-inspector",
+  "version": "0.2.2",
+  "private": true,
+  "description": "Offline, read-only analyzer for Immich Docker Compose upgrade risks, backed by cited official sources.",
+  "author": "Ali Talip Sahin",
+  "type": "module",
+  "bin": {
+    "cri": "bin/cri.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test",
+    "split": "node tools/split-fixtures.mjs",
+    "score": "node tools/score.mjs",
+    "validate": "node tools/validate-fixtures.mjs fixtures && node tools/validate-fixtures.mjs fixtures-advisory",
+    "mutate": "node tools/mutation-check.mjs"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "yaml": "2.9.1"
+  }
+}

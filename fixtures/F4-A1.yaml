@@ -1,0 +1,66 @@
+id: F4-A1
+family: F4
+current_version: v1.131.3
+target_version: v1.137.0
+expected_label: ACTION_REQUIRED
+evidence: [E06, E07]
+evidence_strength: strong
+rationale: >
+  v1.137.0 removed TypeORM: the server must have started at least once on a version in
+  1.132.0-1.136.0. v1.131.3 is below that range. The errors page recommends v1.132.3 as the
+  intermediate step and warns against using v1.136.0 when coming from "v1.131.0 (or earlier)".
+  Whether that wording covers v1.131.1-v1.131.3 is ambiguous; it does not affect this label.
+expected_actions:
+  - "Upgrade to v1.132.3, confirm a successful start, then upgrade to v1.137.0"
+missing_inputs: []
+# Full-report answer key (Phase 1.1, findings added in 1.2): all six families, every finding with its rule,
+# label, services and UNKNOWN reason, every certain action key and the upgrade path. Authored from the
+# sources, then diffed against the engine (0 diffs). Evidence/remediation per rule: test/golden/rules.yaml.
+expected_report:
+  families:
+    F1: NOT_APPLICABLE
+    F2: NOT_APPLICABLE
+    F3: NOT_APPLICABLE
+    F4: ACTION_REQUIRED
+    F5: ADVISORY
+    F6: NOT_APPLICABLE
+  action_keys:
+    - db.migrate-to-vectorchord
+    - path.stop:v1.132.3
+  upgrade_path:
+    status: INTERMEDIATE_REQUIRED
+    stops:
+      - v1.132.3
+    advisory_stops: []
+    open_risks: []
+  missing_tokens: []
+  unknown_rules: []
+  config_details: []
+  findings:
+    - rule: F4-typeorm-boot
+      label: ACTION_REQUIRED
+      services: []
+    - rule: F5-2x-switch-image
+      label: ADVISORY
+      services:
+        - database
+files:
+  docker-compose.yml: |
+    name: immich
+    services:
+      immich-server:
+        image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+        volumes:
+          - ${UPLOAD_LOCATION}:/usr/src/app/upload
+        env_file: [.env]
+        ports: ['2283:2283']
+      database:
+        image: docker.io/tensorchord/pgvecto-rs:pg14-v0.2.0
+  .env: |
+    # SYNTHETIC - not a real deployment
+    UPLOAD_LOCATION=./library
+    DB_DATA_LOCATION=./postgres
+    IMMICH_VERSION=v1.131.3
+    DB_PASSWORD=synthetic-placeholder
+    DB_USERNAME=postgres
+    DB_DATABASE_NAME=immich

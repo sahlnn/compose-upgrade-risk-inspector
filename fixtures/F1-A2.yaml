@@ -1,0 +1,70 @@
+id: F1-A2
+family: F1
+current_version: v2.7.5
+target_version: v3.0.0
+expected_label: ACTION_REQUIRED
+evidence: [E11, E14]
+evidence_strength: strong
+rationale: >
+  v3.0.0 removed the fallback for MACHINE_LEARNING_PRELOAD__CLIP (PR #28326, v3 migration blog).
+  The ML service sets exactly that variable, so it is no longer translated into the __TEXTUAL and
+  __VISUAL variables. Whether v3 then ignores it or fails settings validation was not verified;
+  either way the documented replacement is required.
+expected_actions:
+  - "Replace MACHINE_LEARNING_PRELOAD__CLIP with MACHINE_LEARNING_PRELOAD__CLIP__TEXTUAL and MACHINE_LEARNING_PRELOAD__CLIP__VISUAL"
+missing_inputs: []
+# Full-report answer key (Phase 1.1, findings added in 1.2): all six families, every finding with its rule,
+# label, services and UNKNOWN reason, every certain action key and the upgrade path. Authored from the
+# sources, then diffed against the engine (0 diffs). Evidence/remediation per rule: test/golden/rules.yaml.
+expected_report:
+  families:
+    F1: ACTION_REQUIRED
+    F2: NOT_APPLICABLE
+    F3: NOT_APPLICABLE
+    F4: NOT_APPLICABLE
+    F5: NOT_APPLICABLE
+    F6: NOT_APPLICABLE
+  action_keys:
+    - env.split:MACHINE_LEARNING_PRELOAD__CLIP
+  upgrade_path:
+    status: NO_KNOWN_STOP
+    stops: []
+    advisory_stops: []
+    open_risks: []
+  missing_tokens: []
+  unknown_rules: []
+  config_details: []
+  findings:
+    - rule: F1-300-preload-clip-removed
+      label: ACTION_REQUIRED
+      services:
+        - immich-machine-learning
+files:
+  docker-compose.yml: |
+    name: immich
+    services:
+      immich-server:
+        image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+        volumes:
+          - ${UPLOAD_LOCATION}:/data
+        env_file: [.env]
+        ports: ['2283:2283']
+      immich-machine-learning:
+        image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}
+        volumes:
+          - model-cache:/cache
+        env_file: [.env]
+        environment:
+          MACHINE_LEARNING_PRELOAD__CLIP: ViT-B-32__openai
+      database:
+        image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0
+    volumes:
+      model-cache:
+  .env: |
+    # SYNTHETIC - not a real deployment
+    UPLOAD_LOCATION=./library
+    DB_DATA_LOCATION=./postgres
+    IMMICH_VERSION=v2.7.5
+    DB_PASSWORD=synthetic-placeholder
+    DB_USERNAME=postgres
+    DB_DATABASE_NAME=immich

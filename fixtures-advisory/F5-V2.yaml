@@ -1,0 +1,70 @@
+id: F5-V2
+family: F5
+current_version: v2.6.3
+target_version: v2.7.5
+expected_label: ADVISORY
+evidence: [E22, E08]
+evidence_strength: strong
+rationale: >
+  The old tensorchord pg16-v0.3.0 image (pgvecto.rs only) still works in 2.x: v2.7.5 accepts pgvecto.rs
+  (E21). At tag v2.7.5 the server logs "DEPRECATION WARNING: The pgvecto.rs extension is deprecated
+  and support for it will be removed very soon ... switch to the VectorChord extension instead".
+  It is explicitly recommended and not yet mandatory. The recommended image must keep pg16 and
+  pgvecto.rs 0.3.0 (upgrading docs example).
+expected_actions:
+  - "Recommended before v3: back up, then switch to ghcr.io/immich-app/postgres:16-vectorchord<X>-pgvectors0.3.0 (doc example X=0.3.0; latest X unverified)"
+missing_inputs: []
+# Full-report answer key (Phase 1.1, findings added in 1.2): all six families, every finding with its rule,
+# label, services and UNKNOWN reason, every certain action key and the upgrade path. Authored from the
+# sources, then diffed against the engine (0 diffs). Evidence/remediation per rule: test/golden/rules.yaml.
+expected_report:
+  families:
+    F1: NOT_APPLICABLE
+    F2: NOT_APPLICABLE
+    F3: NOT_APPLICABLE
+    F4: NOT_APPLICABLE
+    F5: ADVISORY
+    F6: NOT_APPLICABLE
+  action_keys:
+    - db.migrate-to-vectorchord
+  upgrade_path:
+    status: NO_KNOWN_STOP
+    stops: []
+    advisory_stops: []
+    open_risks: []
+  missing_tokens: []
+  unknown_rules: []
+  config_details:
+    - PostgreSQL 16
+    - pgvecto.rs 0.3.0
+  findings:
+    - rule: F5-2x-switch-image
+      label: ADVISORY
+      services:
+        - database
+files:
+  docker-compose.yml: |
+    name: immich
+    services:
+      immich-server:
+        image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+        volumes:
+          - ${UPLOAD_LOCATION}:/data
+        env_file: [.env]
+        ports: ['2283:2283']
+      database:
+        image: docker.io/tensorchord/pgvecto-rs:pg16-v0.3.0
+        environment:
+          POSTGRES_PASSWORD: ${DB_PASSWORD}
+          POSTGRES_USER: ${DB_USERNAME}
+          POSTGRES_DB: ${DB_DATABASE_NAME}
+        volumes:
+          - ${DB_DATA_LOCATION}:/var/lib/postgresql/data
+  .env: |
+    # SYNTHETIC - not a real deployment
+    UPLOAD_LOCATION=./library
+    DB_DATA_LOCATION=./postgres
+    IMMICH_VERSION=v2.6.3
+    DB_PASSWORD=synthetic-placeholder
+    DB_USERNAME=postgres
+    DB_DATABASE_NAME=immich

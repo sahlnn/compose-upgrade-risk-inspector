@@ -1,0 +1,72 @@
+id: F2-N2
+family: F2
+current_version: v1.118.2
+target_version: v2.7.5
+expected_label: NOT_APPLICABLE
+evidence: [E02, E06, E17]
+evidence_strength: medium
+evidence_note: "Negative claim (no later mandatory F2 change) rests on a release-note scan."
+rationale: >
+  The compose is already in the post-1.118 shape: one server service, no `command`, no
+  immich-microservices, and '2283:2283'. No later mandatory service-architecture change is
+  documented up to v2.7.5 (the v1.137 /data change is optional, and v2.0.0 says "no special
+  steps are required").
+expected_actions: []
+missing_inputs: []
+# Full-report answer key (Phase 1.1, findings added in 1.2): all six families, every finding with its rule,
+# label, services and UNKNOWN reason, every certain action key and the upgrade path. Authored from the
+# sources, then diffed against the engine (0 diffs). Evidence/remediation per rule: test/golden/rules.yaml.
+expected_report:
+  families:
+    F1: NOT_APPLICABLE
+    F2: NOT_APPLICABLE
+    F3: NOT_APPLICABLE
+    F4: ACTION_REQUIRED
+    F5: ADVISORY
+    F6: NOT_APPLICABLE
+  action_keys:
+    - db.migrate-to-vectorchord
+    - path.stop:v1.132.3
+  upgrade_path:
+    status: INTERMEDIATE_REQUIRED
+    stops:
+      - v1.132.3
+    advisory_stops: []
+    open_risks: []
+  missing_tokens: []
+  unknown_rules: []
+  config_details: []
+  findings:
+    - rule: F4-typeorm-boot
+      label: ACTION_REQUIRED
+      services: []
+    - rule: F5-2x-switch-image
+      label: ADVISORY
+      services:
+        - database
+files:
+  docker-compose.yml: |
+    name: immich
+    services:
+      immich-server:
+        image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+        volumes:
+          - ${UPLOAD_LOCATION}:/usr/src/app/upload
+        env_file: [.env]
+        ports: ['2283:2283']
+        depends_on: [redis, database]
+      immich-machine-learning:
+        image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}
+        env_file: [.env]
+      redis:
+        image: docker.io/redis:6.2-alpine
+      database:
+        image: docker.io/tensorchord/pgvecto-rs:pg14-v0.2.0
+  .env: |
+    # SYNTHETIC - not a real deployment
+    UPLOAD_LOCATION=./library
+    DB_DATA_LOCATION=./postgres
+    IMMICH_VERSION=v1.118.2
+    DB_PASSWORD=synthetic-placeholder
+    DB_USERNAME=postgres
+    DB_DATABASE_NAME=immich

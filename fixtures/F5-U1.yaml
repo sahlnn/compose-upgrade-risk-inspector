@@ -1,0 +1,64 @@
+id: F5-U1
+family: F5
+current_version: v2.7.5
+target_version: v3.0.0
+expected_label: UNKNOWN
+evidence: [E10, E12]
+evidence_strength: strong
+rationale: >
+  No database service in the compose: Immich points to an external PostgreSQL
+  (DB_HOSTNAME=pg.internal.example), and DB_VECTOR_EXTENSION is not set (auto-detect). The
+  installed extensions can only be found by querying that database, which is out of scope for a
+  static tool. It may still be on pgvecto.rs, which v3.0.0 rejects.
+expected_actions: ["Check installed extensions on the external DB (see the standalone PostgreSQL docs)"]
+missing_inputs: ["external DB extension inventory"]
+# Full-report answer key (Phase 1.1, findings added in 1.2): all six families, every finding with its rule,
+# label, services and UNKNOWN reason, every certain action key and the upgrade path. Authored from the
+# sources, then diffed against the engine (0 diffs). Evidence/remediation per rule: test/golden/rules.yaml.
+expected_report:
+  families:
+    F1: NOT_APPLICABLE
+    F2: NOT_APPLICABLE
+    F3: NOT_APPLICABLE
+    F4: NOT_APPLICABLE
+    F5: UNKNOWN
+    F6: UNKNOWN
+  action_keys: []
+  upgrade_path:
+    status: NO_KNOWN_STOP
+    stops: []
+    advisory_stops: []
+    open_risks: []
+  missing_tokens:
+    - pg.internal.example
+  unknown_rules: []
+  config_details: []
+  findings:
+    - rule: F5-300-no-supported-extension
+      label: UNKNOWN
+      services: []
+      why: pg.internal.example
+    - rule: F6-300-legacy-vectors-command
+      label: UNKNOWN
+      services: []
+      why: pg.internal.example
+files:
+  docker-compose.yml: |
+    name: immich
+    services:
+      immich-server:
+        image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+        volumes:
+          - ${UPLOAD_LOCATION}:/data
+        env_file: [.env]
+        ports: ['2283:2283']
+      redis:
+        image: docker.io/valkey/valkey:8-bookworm
+  .env: |
+    # SYNTHETIC - not a real deployment
+    UPLOAD_LOCATION=./library
+    IMMICH_VERSION=v2.7.5
+    DB_HOSTNAME=pg.internal.example
+    DB_PASSWORD=synthetic-placeholder
+    DB_USERNAME=immich
+    DB_DATABASE_NAME=immich

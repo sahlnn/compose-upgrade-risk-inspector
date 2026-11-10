@@ -1,0 +1,67 @@
+id: F6-A2
+family: F6
+current_version: v1.140.1
+target_version: v3.0.0
+expected_label: ACTION_REQUIRED
+evidence: [E11, E12, E21]
+evidence_strength: strong
+rationale: >
+  The same removed value, but set in the service's `environment:` block instead of .env, which
+  tests that both sources are read. The image is also the old tensorchord image, so F5 triggers
+  too (scored separately).
+expected_actions:
+  - "Remove DB_VECTOR_EXTENSION: pgvecto.rs from immich-server.environment (plus the F5 image switch)"
+missing_inputs: []
+# Full-report answer key (Phase 1.1, findings added in 1.2): all six families, every finding with its rule,
+# label, services and UNKNOWN reason, every certain action key and the upgrade path. Authored from the
+# sources, then diffed against the engine (0 diffs). Evidence/remediation per rule: test/golden/rules.yaml.
+expected_report:
+  families:
+    F1: NOT_APPLICABLE
+    F2: NOT_APPLICABLE
+    F3: NOT_APPLICABLE
+    F4: NOT_APPLICABLE
+    F5: ACTION_REQUIRED
+    F6: ACTION_REQUIRED
+  action_keys:
+    - db.image.replace-with-vectorchord
+    - env.remove:DB_VECTOR_EXTENSION=pgvecto.rs
+  upgrade_path:
+    status: NO_KNOWN_STOP
+    stops: []
+    advisory_stops: []
+    open_risks: []
+  missing_tokens: []
+  unknown_rules: []
+  config_details: []
+  findings:
+    - rule: F5-300-no-supported-extension
+      label: ACTION_REQUIRED
+      services:
+        - database
+    - rule: F6-300-env-pgvectors-rejected
+      label: ACTION_REQUIRED
+      services:
+        - immich-server
+files:
+  docker-compose.yml: |
+    name: immich
+    services:
+      immich-server:
+        image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+        volumes:
+          - ${UPLOAD_LOCATION}:/usr/src/app/upload
+        env_file: [.env]
+        environment:
+          DB_VECTOR_EXTENSION: pgvecto.rs
+        ports: ['2283:2283']
+      database:
+        image: docker.io/tensorchord/pgvecto-rs:pg14-v0.2.0
+  .env: |
+    # SYNTHETIC - not a real deployment
+    UPLOAD_LOCATION=./library
+    DB_DATA_LOCATION=./postgres
+    IMMICH_VERSION=v1.140.1
+    DB_PASSWORD=synthetic-placeholder
+    DB_USERNAME=postgres
+    DB_DATABASE_NAME=immich

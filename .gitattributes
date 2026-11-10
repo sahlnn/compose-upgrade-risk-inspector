@@ -1,0 +1,14 @@
+# Normalize every text file to LF in the repository and in working copies, on every platform.
+# The example outputs under examples/ are compared byte-for-byte by test/examples.test.mjs, and
+# fixtures, rule files and version registries are parsed line by line; CRLF checkouts would change them.
+* text=auto eol=lf
+
+*.mjs   text eol=lf
+*.js    text eol=lf
+*.json  text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
+*.md    text eol=lf
+*.txt   text eol=lf
+.env    text eol=lf
+*.env   text eol=lf

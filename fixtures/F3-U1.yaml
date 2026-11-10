@@ -1,0 +1,63 @@
+id: F3-U1
+family: F3
+current_version: unknown
+target_version: v1.133.0
+expected_label: UNKNOWN
+evidence: [E04]
+evidence_strength: strong
+rationale: >
+  The server image uses the floating `release` tag and IMMICH_VERSION is not set, so the running
+  version cannot be found from config. It may be below 1.107.2. The tag says what will be pulled
+  next, not what is running now.
+expected_actions: ["Read the running version (web UI / server about endpoint) and re-run with --current"]
+missing_inputs: ["running server version"]
+# Full-report answer key (Phase 1.1, findings added in 1.2): all six families, every finding with its rule,
+# label, services and UNKNOWN reason, every certain action key and the upgrade path. Authored from the
+# sources, then diffed against the engine (0 diffs). Evidence/remediation per rule: test/golden/rules.yaml.
+expected_report:
+  families:
+    F1: NOT_APPLICABLE
+    F2: NOT_APPLICABLE
+    F3: UNKNOWN
+    F4: NOT_APPLICABLE
+    F5: ADVISORY
+    F6: NOT_APPLICABLE
+  action_keys:
+    - db.migrate-to-vectorchord
+  upgrade_path:
+    status: UNKNOWN
+    stops: []
+    advisory_stops: []
+    open_risks:
+      - F3-floor-1.107.2
+  missing_tokens:
+    - running Immich version
+  unknown_rules: []
+  config_details: []
+  findings:
+    - rule: F3-floor-1.107.2
+      label: UNKNOWN
+      services: []
+      why: running Immich version
+    - rule: F5-2x-switch-image
+      label: ADVISORY
+      services:
+        - database
+files:
+  docker-compose.yml: |
+    services:
+      immich-server:
+        image: ghcr.io/immich-app/immich-server:release
+        volumes:
+          - ${UPLOAD_LOCATION}:/usr/src/app/upload
+        env_file: [.env]
+        ports: ['2283:2283']
+      database:
+        image: docker.io/tensorchord/pgvecto-rs:pg14-v0.2.0
+  .env: |
+    # SYNTHETIC - not a real deployment
+    UPLOAD_LOCATION=./library
+    DB_DATA_LOCATION=./postgres
+    DB_PASSWORD=synthetic-placeholder
+    DB_USERNAME=postgres
+    DB_DATABASE_NAME=immich

@@ -1,0 +1,74 @@
+id: F4-U1
+family: F4
+current_version: v1.130.3
+target_version: v1.136.0
+expected_label: UNKNOWN
+evidence: [E07]
+evidence_strength: weak
+evidence_note: "Source condition is vague (some installations); with ADVISORY available this case is a relabel candidate."
+rationale: >
+  The target is below 1.137.0, so the TypeORM requirement itself does not apply. However, the
+  errors page warns: avoid v1.136.0 when upgrading from v1.131.0 or earlier, "due to a bug
+  blocking this upgrade in some installations". The source does not say which installations
+  are affected, and nothing in the compose can decide it. This is not safe, so not
+  NOT_APPLICABLE; it is not a documented requirement for every install, so not ACTION_REQUIRED.
+  Safe path to report: go via v1.132.3.
+expected_actions: ["Prefer the path v1.130.3 -> v1.132.3 -> v1.136.0"]
+missing_inputs: ["official definition of affected installations"]
+# Full-report answer key (Phase 1.1, findings added in 1.2): all six families, every finding with its rule,
+# label, services and UNKNOWN reason, every certain action key and the upgrade path. Authored from the
+# sources, then diffed against the engine (0 diffs). Evidence/remediation per rule: test/golden/rules.yaml.
+expected_report:
+  families:
+    F1: NOT_APPLICABLE
+    F2: NOT_APPLICABLE
+    F3: NOT_APPLICABLE
+    F4: UNKNOWN
+    F5: ADVISORY
+    F6: NOT_APPLICABLE
+  action_keys:
+    - db.migrate-to-vectorchord
+    - path.avoid:v1.136.0
+  upgrade_path:
+    status: UNKNOWN
+    stops: []
+    advisory_stops:
+      - v1.132.3
+    open_risks:
+      - F4-136-bug-from-old
+  missing_tokens: []
+  unknown_rules:
+    - F4-136-bug-from-old
+  config_details: []
+  findings:
+    - rule: F4-136-bug-from-old
+      label: UNKNOWN
+      services: []
+      why: unverified
+    - rule: F4-136-avoid-from-old
+      label: ADVISORY
+      services: []
+    - rule: F5-2x-switch-image
+      label: ADVISORY
+      services:
+        - database
+files:
+  docker-compose.yml: |
+    name: immich
+    services:
+      immich-server:
+        image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+        volumes:
+          - ${UPLOAD_LOCATION}:/usr/src/app/upload
+        env_file: [.env]
+        ports: ['2283:2283']
+      database:
+        image: docker.io/tensorchord/pgvecto-rs:pg14-v0.2.0
+  .env: |
+    # SYNTHETIC - not a real deployment
+    UPLOAD_LOCATION=./library
+    DB_DATA_LOCATION=./postgres
+    IMMICH_VERSION=v1.130.3
+    DB_PASSWORD=synthetic-placeholder
+    DB_USERNAME=postgres
+    DB_DATABASE_NAME=immich

@@ -1,0 +1,81 @@
+id: F4-U2
+family: F4
+current_version: unknown
+target_version: v2.0.0
+expected_label: UNKNOWN
+evidence: [E07]
+evidence_strength: strong
+rationale: >
+  The image tag is ${IMMICH_VERSION:-release} and the .env that would set IMMICH_VERSION was not
+  provided. The running version is unknown, so it is unknown whether the 1.132.0-1.136.0 boot
+  requirement for a >= v1.137.0 target has been met.
+expected_actions: ["Provide .env or the running version"]
+missing_inputs: [".env", "running server version"]
+# Full-report answer key (Phase 1.1, findings added in 1.2): all six families, every finding with its rule,
+# label, services and UNKNOWN reason, every certain action key and the upgrade path. Authored from the
+# sources, then diffed against the engine (0 diffs). Evidence/remediation per rule: test/golden/rules.yaml.
+expected_report:
+  families:
+    F1: UNKNOWN
+    F2: NOT_APPLICABLE
+    F3: UNKNOWN
+    F4: UNKNOWN
+    F5: UNKNOWN
+    F6: NOT_APPLICABLE
+  action_keys: []
+  upgrade_path:
+    status: UNKNOWN
+    stops: []
+    advisory_stops: []
+    open_risks:
+      - F3-floor-1.107.2
+      - F4-typeorm-boot
+  missing_tokens:
+    - running Immich version
+  unknown_rules: []
+  config_details: []
+  findings:
+    - rule: F1-106-port-host-renamed
+      label: UNKNOWN
+      services: []
+      why: running Immich version
+    - rule: F1-119-host-renamed
+      label: UNKNOWN
+      services: []
+      why: running Immich version
+    - rule: F1-119-metrics-removed
+      label: UNKNOWN
+      services: []
+      why: running Immich version
+    - rule: F1-136-media-location-relative
+      label: UNKNOWN
+      services: []
+      why: running Immich version
+    - rule: F3-floor-1.107.2
+      label: UNKNOWN
+      services: []
+      why: running Immich version
+    - rule: F4-typeorm-boot
+      label: UNKNOWN
+      services: []
+      why: running Immich version
+    - rule: F5-2x-switch-image
+      label: UNKNOWN
+      services: []
+      why: .env
+    - rule: F5-2x-explicit-pgvectors
+      label: UNKNOWN
+      services: []
+      why: .env
+files:
+  docker-compose.yml: |
+    name: immich
+    services:
+      immich-server:
+        image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+        volumes:
+          - ${UPLOAD_LOCATION}:/usr/src/app/upload
+        env_file: [.env]
+        ports: ['2283:2283']
+      database:
+        image: docker.io/tensorchord/pgvecto-rs:pg14-v0.2.0

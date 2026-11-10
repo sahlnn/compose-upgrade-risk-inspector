@@ -1,0 +1,158 @@
+{
+  "tool": "compose-upgrade-risk-inspector",
+  "schema": 3,
+  "request": {
+    "current": "v2.7.5",
+    "target": "v3.0.0"
+  },
+  "inputs": {
+    "compose": "docker-compose.yml",
+    "files_read": [
+      "docker-compose.yml",
+      ".env"
+    ],
+    "missing": [],
+    "unsupported": [],
+    "notes": [
+      "database service not determined: database host 'db.example.internal' is not a service in this compose (external database?)"
+    ]
+  },
+  "assessment": {
+    "status": "UNKNOWN",
+    "meaning": "At least one supported check could not be decided from the given inputs. This is not a pass."
+  },
+  "coverage": {
+    "families": [
+      "F1",
+      "F2",
+      "F3",
+      "F4",
+      "F5",
+      "F6"
+    ],
+    "not_applicable_means": "NOT_APPLICABLE: with complete inputs, no supported rule of that family matched. It is not a safety verdict.",
+    "not_covered": "Changes outside these six families (API, mobile app, hardware/CPU requirements, admin settings, data migrations) are not checked."
+  },
+  "upgrade_path": {
+    "status": "NO_KNOWN_STOP",
+    "stops": [],
+    "advisory_stops": [],
+    "open_risks": []
+  },
+  "families": {
+    "F1": {
+      "name": "Environment variables",
+      "label": "NOT_APPLICABLE",
+      "findings": []
+    },
+    "F2": {
+      "name": "Service architecture",
+      "label": "NOT_APPLICABLE",
+      "findings": []
+    },
+    "F3": {
+      "name": "Direct-upgrade floor",
+      "label": "NOT_APPLICABLE",
+      "findings": []
+    },
+    "F4": {
+      "name": "Intermediate migration",
+      "label": "NOT_APPLICABLE",
+      "findings": []
+    },
+    "F5": {
+      "name": "PostgreSQL / VectorChord",
+      "label": "UNKNOWN",
+      "findings": [
+        {
+          "rule_id": "F5-300-no-supported-extension",
+          "family": "F5",
+          "label": "UNKNOWN",
+          "action_key": "db.image.replace-with-vectorchord",
+          "remediation": {
+            "op": "replace_db_image",
+            "subjects": [
+              "tensorchord/pgvecto-rs"
+            ],
+            "replacements": [
+              "ghcr.io/immich-app/postgres"
+            ],
+            "backup": true
+          },
+          "action": "Cannot decide without the missing inputs. If it applies: Back up the database, then replace the tensorchord/pgvecto-rs image with a ghcr.io/immich-app/postgres image that matches the PostgreSQL major version and pgvecto.rs version of the current image (they could not be read here: verify both in your compose file), and remove the legacy command/healthcheck overrides.",
+          "evidence": [
+            {
+              "id": "E10",
+              "url": "https://github.com/immich-app/immich/releases/tag/v3.0.0",
+              "revision": "tag v3.0.0"
+            },
+            {
+              "id": "E12",
+              "url": "https://github.com/immich-app/immich/pull/28159",
+              "revision": "merge 97c62136"
+            },
+            {
+              "id": "E08",
+              "url": "https://docs.immich.app/install/upgrading#migrating-to-vectorchord",
+              "revision": "docs/docs/install/upgrading.md @ 87ef8950"
+            }
+          ],
+          "config": [],
+          "missing_inputs": [
+            "database host 'db.example.internal' is not a service in this compose (external database?)"
+          ]
+        }
+      ]
+    },
+    "F6": {
+      "name": "pgvecto.rs removal",
+      "label": "UNKNOWN",
+      "findings": [
+        {
+          "rule_id": "F6-300-legacy-vectors-command",
+          "family": "F6",
+          "label": "UNKNOWN",
+          "action_key": "db.command:legacy-vectors.so",
+          "remediation": {
+            "op": "remove_db_command",
+            "subjects": [
+              "vectors.so"
+            ],
+            "replacements": []
+          },
+          "action": "Cannot decide without the missing inputs. If it applies: Remove the legacy `command:` override (vectors.so) from the database service.",
+          "evidence": [
+            {
+              "id": "E04",
+              "url": "https://github.com/immich-app/immich/releases/tag/v1.133.0",
+              "revision": "tag v1.133.0"
+            },
+            {
+              "id": "E08",
+              "url": "https://docs.immich.app/install/upgrading#migrating-to-vectorchord",
+              "revision": "docs/docs/install/upgrading.md @ 87ef8950"
+            }
+          ],
+          "config": [],
+          "missing_inputs": [
+            "database host 'db.example.internal' is not a service in this compose (external database?)"
+          ]
+        }
+      ]
+    }
+  },
+  "summary": {
+    "ACTION_REQUIRED": [],
+    "UNKNOWN": [
+      "F5",
+      "F6"
+    ],
+    "ADVISORY": [],
+    "NOT_APPLICABLE": [
+      "F1",
+      "F2",
+      "F3",
+      "F4"
+    ]
+  }
+}

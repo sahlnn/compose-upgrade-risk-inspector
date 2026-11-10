@@ -1,0 +1,321 @@
+# Immich upgrade rules. Data only: the engine knows predicate types, never Immich specifics.
+#
+# kind -> label:  mandatory -> ACTION_REQUIRED | advisory -> ADVISORY | unverified -> UNKNOWN
+# A condition that cannot be decided (missing file, unresolved variable, unknown version) yields
+# UNKNOWN for that rule, whatever its kind. Conditions are three-valued: true / false / unknown.
+#
+# Version predicates: crosses: X  means  current < X <= target.
+# Service selectors: server (image ghcr.io/immich-app/immich-server), ml (immich-machine-learning),
+#   immich (server or ml), any (every service), database (the service Immich's DB host points to).
+#
+# remediation is the ONLY source of the user-facing instruction: the action text is generated from it at load
+# time ({op, subjects, replacements, backup?, before?}). `summary` is context only and may not contain instructions.
+
+schema: 1
+
+path_constraints:
+  - id: F3-floor-1.107.2
+    family: F3
+    evidence: [E04]
+    applies_if_target_gte: v1.133.0
+    requires_current_gte: v1.107.2
+    stop: v1.107.2
+    summary: "Immich >= 1.133.0 only supports upgrading directly from 1.107.2 or later."
+    remediation: { op: upgrade_via, subjects: [], replacements: [v1.107.2] }
+  - id: F4-typeorm-boot
+    family: F4
+    evidence: [E06, E07]
+    applies_if_target_gte: v1.137.0
+    requires_current_gte: v1.132.0
+    stop: v1.132.3
+    summary: "Immich >= 1.137.0 requires one successful start on 1.132.0-1.136.0 (TypeORM removal)."
+    remediation: { op: upgrade_via, subjects: [], replacements: [v1.132.3] }
+
+# Documented ghcr.io/immich-app/postgres images per (PostgreSQL major, pgvecto.rs version). Only these get an exact tag;
+# other combinations get component-matching guidance. Both tags appear verbatim in the upgrading docs (E08).
+db_images:
+  - { pg: "14", pgvecto_rs: 0.2.0, image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0, evidence: [E08] }
+  - { pg: "16", pgvecto_rs: 0.3.0, image: ghcr.io/immich-app/postgres:16-vectorchord0.3.0-pgvectors0.3.0, evidence: [E08] }
+
+rules:
+  # ---------------- F1: environment variables ----------------
+  - id: F1-106-port-host-renamed
+    family: F1
+    kind: mandatory
+    action_key: env.rename:legacy-port-host
+    evidence: [E01]
+    summary: "SERVER_PORT (API server) was renamed to IMMICH_PORT. Each legacy port/host variable is a separate rule, scoped to the service that reads it."
+    remediation: { op: rename_env, subjects: [SERVER_PORT], replacements: [IMMICH_PORT] }
+    when:
+      all:
+        - crosses: v1.106.0
+        # v0.2.2: server image, but not the separate `start.sh microservices` container (E01 compose diff).
+        - env_set: { service: server, keys: [SERVER_PORT], command: { argv: [start.sh, microservices], match: false } }
+  # v0.2.2: MICROSERVICES_PORT belongs to the separate immich-microservices container (server image, command
+  # `start.sh microservices`, E01). From v1.118 that container is removed (E02, F2-118-microservices-removed), so the
+  # rename applies only to targets below v1.118.0.
+  - id: F1-106-microservices-port-renamed
+    family: F1
+    kind: mandatory
+    action_key: env.rename:MICROSERVICES_PORT
+    evidence: [E01, E02]
+    summary: "MICROSERVICES_PORT was renamed to IMMICH_PORT in v1.106 (separate microservices container)."
+    remediation: { op: rename_env, subjects: [MICROSERVICES_PORT], replacements: [IMMICH_PORT] }
+    when:
+      all:
+        - crosses: v1.106.0
+        - target_lt: v1.118.0
+        - env_set: { service: server, keys: [MICROSERVICES_PORT], command: { argv: [start.sh, microservices], match: true } }
+  # v0.2.2: MACHINE_LEARNING_PORT belongs to the machine-learning container (E01).
+  - id: F1-106-ml-port-renamed
+    family: F1
+    kind: mandatory
+    action_key: env.rename:MACHINE_LEARNING_PORT
+    evidence: [E01]
+    summary: "MACHINE_LEARNING_PORT was renamed to IMMICH_PORT in v1.106 (machine-learning container)."
+    remediation: { op: rename_env, subjects: [MACHINE_LEARNING_PORT], replacements: [IMMICH_PORT] }
+    when:
+      all:
+        - crosses: v1.106.0
+        - env_set: { service: ml, keys: [MACHINE_LEARNING_PORT] }
+  # v0.2.1: MACHINE_LEARNING_HOST is the machine-learning container's variable (E01), so its rename applies to the ML
+  # service only. HOST is the server's (E03), see below. A rename into an IMMICH_HOST that would collide (two values in
+  # one scope, or an existing different IMMICH_HOST) is turned into a collision diagnostic by the engine's guard.
+  - id: F1-106-ml-host-renamed
+    family: F1
+    kind: mandatory
+    action_key: env.rename:MACHINE_LEARNING_HOST
+    evidence: [E01]
+    summary: "MACHINE_LEARNING_HOST was renamed to IMMICH_HOST in v1.106 (machine-learning container)."
+    remediation: { op: rename_env, subjects: [MACHINE_LEARNING_HOST], replacements: [IMMICH_HOST] }
+    when:
+      all:
+        - crosses: v1.106.0
+        - env_set: { service: ml, keys: [MACHINE_LEARNING_HOST] }
+  - id: F1-106-host-transition
+    family: F1
+    kind: advisory
+    action_key: env.duplicate:HOST
+    evidence: [E01, E03]
+    summary: "v1.106 documents HOST -> IMMICH_HOST, but until the v1.119.0 fix the server still read HOST."
+    remediation: { op: duplicate_env, subjects: [HOST], replacements: [IMMICH_HOST] }
+    when:
+      all:
+        - crosses: v1.106.0
+        - target_lt: v1.119.0
+        - env_set: { service: server, keys: [HOST] }
+  - id: F1-119-host-renamed
+    family: F1
+    kind: mandatory
+    action_key: env.rename:HOST
+    evidence: [E03]
+    summary: "The erroneous HOST variable is no longer read; IMMICH_HOST is the binding variable."
+    remediation: { op: rename_env, subjects: [HOST], replacements: [IMMICH_HOST] }
+    when:
+      all:
+        - crosses: v1.119.0
+        - env_set: { service: server, keys: [HOST] }
+  - id: F1-119-metrics-removed
+    family: F1
+    kind: mandatory
+    action_key: env.replace:IMMICH_METRICS
+    evidence: [E03]
+    summary: "IMMICH_METRICS, IMMICH_API_METRICS, IMMICH_HOST_METRICS, IMMICH_IO_METRICS and IMMICH_JOB_METRICS were removed."
+    remediation: { op: replace_env, subjects: [IMMICH_METRICS, IMMICH_API_METRICS, IMMICH_HOST_METRICS, IMMICH_IO_METRICS, IMMICH_JOB_METRICS], replacements: [IMMICH_TELEMETRY_INCLUDE, IMMICH_TELEMETRY_EXCLUDE] }
+    when:
+      all:
+        - crosses: v1.119.0
+        - env_set: { service: server, keys: [IMMICH_METRICS, IMMICH_API_METRICS, IMMICH_HOST_METRICS, IMMICH_IO_METRICS, IMMICH_JOB_METRICS] }
+  - id: F1-136-media-location-relative
+    family: F1
+    kind: mandatory
+    action_key: env.fix:IMMICH_MEDIA_LOCATION
+    evidence: [E05]
+    summary: "A relative IMMICH_MEDIA_LOCATION must become an absolute path (unset or absolute is unaffected)."
+    remediation: { op: set_absolute_path, subjects: [IMMICH_MEDIA_LOCATION], replacements: [immich-admin, change-media-location] }
+    when:
+      all:
+        - crosses: v1.136.0
+        - env_relative_path: { service: server, key: IMMICH_MEDIA_LOCATION }
+  - id: F1-300-ping-timeout-removed
+    family: F1
+    kind: mandatory
+    action_key: env.remove:IMMICH_MACHINE_LEARNING_PING_TIMEOUT
+    evidence: [E11, E13, E21]
+    summary: "IMMICH_MACHINE_LEARNING_PING_TIMEOUT was removed in v3."
+    remediation: { op: remove_env, subjects: [IMMICH_MACHINE_LEARNING_PING_TIMEOUT], replacements: [machineLearning.availabilityChecks.timeout] }
+    when:
+      all:
+        - crosses: v3.0.0
+        - env_set: { service: server, keys: [IMMICH_MACHINE_LEARNING_PING_TIMEOUT] }
+  - id: F1-300-preload-clip-removed
+    family: F1
+    kind: mandatory
+    action_key: env.split:MACHINE_LEARNING_PRELOAD__CLIP
+    evidence: [E11, E14]
+    summary: "MACHINE_LEARNING_PRELOAD__CLIP is no longer translated in v3."
+    remediation: { op: split_env, subjects: [MACHINE_LEARNING_PRELOAD__CLIP], replacements: [MACHINE_LEARNING_PRELOAD__CLIP__TEXTUAL, MACHINE_LEARNING_PRELOAD__CLIP__VISUAL] }
+    when:
+      all:
+        - crosses: v3.0.0
+        - env_set: { service: ml, keys: [MACHINE_LEARNING_PRELOAD__CLIP] }
+  - id: F1-300-preload-face-removed
+    family: F1
+    kind: mandatory
+    action_key: env.split:MACHINE_LEARNING_PRELOAD__FACIAL_RECOGNITION
+    evidence: [E11, E14]
+    summary: "MACHINE_LEARNING_PRELOAD__FACIAL_RECOGNITION is no longer translated in v3."
+    remediation: { op: split_env, subjects: [MACHINE_LEARNING_PRELOAD__FACIAL_RECOGNITION], replacements: [MACHINE_LEARNING_PRELOAD__FACIAL_RECOGNITION__DETECTION, MACHINE_LEARNING_PRELOAD__FACIAL_RECOGNITION__RECOGNITION] }
+    when:
+      all:
+        - crosses: v3.0.0
+        - env_set: { service: ml, keys: [MACHINE_LEARNING_PRELOAD__FACIAL_RECOGNITION] }
+  - id: F1-2x-preload-clip-deprecated
+    family: F1
+    kind: advisory
+    action_key: env.split:MACHINE_LEARNING_PRELOAD__CLIP
+    evidence: [E23, E11]
+    summary: "The ML service logs a deprecation warning for MACHINE_LEARNING_PRELOAD__CLIP; v3 removes it."
+    remediation: { op: split_env, subjects: [MACHINE_LEARNING_PRELOAD__CLIP], replacements: [MACHINE_LEARNING_PRELOAD__CLIP__TEXTUAL, MACHINE_LEARNING_PRELOAD__CLIP__VISUAL], before: v3.0.0 }
+    when:
+      all:
+        - target_gte: v2.0.0
+        - target_lt: v3.0.0
+        - env_set: { service: ml, keys: [MACHINE_LEARNING_PRELOAD__CLIP] }
+  - id: F1-2x-preload-face-deprecated
+    family: F1
+    kind: advisory
+    action_key: env.split:MACHINE_LEARNING_PRELOAD__FACIAL_RECOGNITION
+    evidence: [E23, E11]
+    summary: "The ML service logs a deprecation warning for MACHINE_LEARNING_PRELOAD__FACIAL_RECOGNITION; v3 removes it."
+    remediation: { op: split_env, subjects: [MACHINE_LEARNING_PRELOAD__FACIAL_RECOGNITION], replacements: [MACHINE_LEARNING_PRELOAD__FACIAL_RECOGNITION__DETECTION, MACHINE_LEARNING_PRELOAD__FACIAL_RECOGNITION__RECOGNITION], before: v3.0.0 }
+    when:
+      all:
+        - target_gte: v2.0.0
+        - target_lt: v3.0.0
+        - env_set: { service: ml, keys: [MACHINE_LEARNING_PRELOAD__FACIAL_RECOGNITION] }
+
+  # ---------------- F2: service architecture ----------------
+  - id: F2-118-start-sh-removed
+    family: F2
+    kind: mandatory
+    action_key: compose.remove:start.sh-command
+    evidence: [E02]
+    summary: "`start.sh immich` / `start.sh microservices` commands were removed."
+    remediation: { op: remove_command, subjects: [start.sh], replacements: [] }
+    when:
+      all:
+        - crosses: v1.118.0
+        - command_argv: { service: server, argv: [start.sh] }
+  - id: F2-118-microservices-removed
+    family: F2
+    kind: mandatory
+    action_key: compose.remove:immich-microservices
+    evidence: [E02, E01]
+    summary: "The separate immich-microservices container is no longer supported."
+    remediation: { op: remove_service, subjects: [immich-microservices], replacements: [] }
+    when:
+      all:
+        - crosses: v1.118.0
+        - command_argv: { service: server, argv: [start.sh, microservices] }
+  - id: F2-118-port-alignment
+    family: F2
+    kind: mandatory
+    action_key: compose.ports:immich-server-2283
+    evidence: [E02, E09]
+    summary: "immich-server now listens on 2283 inside the container by default (was 3001); IMMICH_PORT sets the listening port."
+    remediation: { op: change_container_port, subjects: ["3001"], replacements: ["2283", "IMMICH_PORT=3001"] }
+    when:
+      all:
+        - crosses: v1.118.0
+        # An explicit IMMICH_PORT=3001 on the SAME service keeps the old listening port, so its old mapping stays consistent.
+        - container_port: { service: server, equals: 3001, unless_env: { IMMICH_PORT: "3001" } }
+
+  # ---------------- F4: advisory/unverified path risks ----------------
+  - id: F4-136-bug-from-old
+    family: F4
+    kind: unverified
+    action_key: path.risk:v1.136.0-bug
+    evidence: [E07]
+    summary: "v1.136.0 has a bug blocking upgrades from v1.131.0 or earlier 'in some installations'; affected installations are not defined."
+    remediation: { op: investigate, subjects: [v1.136.0], replacements: [] }
+    when:
+      all:
+        - current_lte: v1.131.0
+        - target_eq: v1.136.0
+  - id: F4-136-avoid-from-old
+    family: F4
+    kind: advisory
+    action_key: path.avoid:v1.136.0
+    recommended_stop: v1.132.3
+    evidence: [E07]
+    summary: "Official docs: avoid v1.136.0 if upgrading from v1.131.0 (or earlier)."
+    remediation: { op: upgrade_via, subjects: [v1.136.0], replacements: [v1.132.3] }
+    when:
+      all:
+        - current_lte: v1.131.0
+        - target_eq: v1.136.0
+
+  # ---------------- F5: PostgreSQL / VectorChord ----------------
+  - id: F5-300-no-supported-extension
+    family: F5
+    kind: mandatory
+    action_key: db.image.replace-with-vectorchord
+    evidence: [E10, E12, E08]
+    summary: "v3 refuses to start without a supported vector extension; the tensorchord/pgvecto-rs image only has pgvecto.rs."
+    remediation: { op: replace_db_image, subjects: [tensorchord/pgvecto-rs], replacements: [ghcr.io/immich-app/postgres], backup: true }
+    when:
+      all:
+        - target_gte: v3.0.0
+        - current_lt: v3.0.0
+        - db_kind: { in: [pgvecto-rs] }
+  - id: F5-2x-switch-image
+    family: F5
+    kind: advisory
+    action_key: db.migrate-to-vectorchord
+    evidence: [E04, E22, E08]
+    summary: "pgvecto.rs still works before v3 but is deprecated; official text says to switch to VectorChord."
+    remediation: { op: replace_db_image, subjects: [tensorchord/pgvecto-rs], replacements: [ghcr.io/immich-app/postgres], backup: true, before: v3.0.0 }
+    when:
+      all:
+        - target_gte: v1.133.0
+        - target_lt: v3.0.0
+        - db_kind: { in: [pgvecto-rs] }
+  - id: F5-2x-explicit-pgvectors
+    family: F5
+    kind: advisory
+    action_key: db.migrate-to-vectorchord
+    evidence: [E22, E08, E21]
+    summary: "DB_VECTOR_EXTENSION=pgvecto.rs keeps the database on deprecated pgvecto.rs."
+    remediation: { op: unset_env, subjects: [DB_VECTOR_EXTENSION], replacements: [vectorchord], backup: true, before: v3.0.0 }
+    when:
+      all:
+        - target_gte: v1.133.0
+        - target_lt: v3.0.0
+        - db_kind: { in: [immich-postgres] }
+        - env_equals: { service: server, key: DB_VECTOR_EXTENSION, value: pgvecto.rs }
+
+  # ---------------- F6: pgvecto.rs removal ----------------
+  - id: F6-300-env-pgvectors-rejected
+    family: F6
+    kind: mandatory
+    action_key: env.remove:DB_VECTOR_EXTENSION=pgvecto.rs
+    evidence: [E11, E12, E21]
+    summary: "v3 only accepts DB_VECTOR_EXTENSION values pgvector | vectorchord; pgvecto.rs throws an error."
+    remediation: { op: unset_env, subjects: [DB_VECTOR_EXTENSION], replacements: [vectorchord], backup: true }
+    when:
+      all:
+        - crosses: v3.0.0
+        - env_equals: { service: server, key: DB_VECTOR_EXTENSION, value: pgvecto.rs }
+  - id: F6-300-legacy-vectors-command
+    family: F6
+    kind: unverified
+    action_key: db.command:legacy-vectors.so
+    evidence: [E04, E08]
+    summary: "The VectorChord image is combined with the pre-1.133 `command` override (vectors.so). Official docs remove it but do not state the effect of keeping it."
+    remediation: { op: remove_db_command, subjects: [vectors.so], replacements: [] }
+    when:
+      all:
+        - target_gte: v3.0.0
+        - db_kind: { in: [immich-postgres] }
+        - command_contains: { service: database, text: vectors.so }

@@ -1,0 +1,29 @@
+# Minimal CI: install the locked dependency and run the local verification on Ubuntu and Windows, Node.js 24.
+# The development-set comparison (41 synthetic cases, full report) runs inside `node --test`
+# (test/regression.test.mjs), so `tools/score.mjs` is not run separately here.
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: node --test
+      - run: node bin/cri.mjs lint
+      - run: npm run -s validate

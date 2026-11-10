@@ -1,0 +1,27 @@
+# Machine-readable mirror of the source table in EVIDENCE.md (a test keeps the IDs in sync).
+# revision = what was read; mutable = whether the source can change after capture (2026-11-09).
+E01: { title: "Release v1.106.1 (env renames, microservices removal)", url: "https://github.com/immich-app/immich/releases/tag/v1.106.1", revision: "tag v1.106.1", mutable: true }
+E02: { title: "Release v1.118.0 (port alignment, start.sh removal)", url: "https://github.com/immich-app/immich/releases/tag/v1.118.0", revision: "tag v1.118.0", mutable: true }
+E03: { title: "Release v1.119.0 (HOST -> IMMICH_HOST, metrics env removed)", url: "https://github.com/immich-app/immich/releases/tag/v1.119.0", revision: "tag v1.119.0", mutable: true }
+E04: { title: "Release v1.133.0 (1.107.2 floor, VectorChord)", url: "https://github.com/immich-app/immich/releases/tag/v1.133.0", revision: "tag v1.133.0", mutable: true }
+E05: { title: "Release v1.136.0 (IMMICH_MEDIA_LOCATION absolute path)", url: "https://github.com/immich-app/immich/releases/tag/v1.136.0", revision: "tag v1.136.0", mutable: true }
+E06: { title: "Release v1.137.0 (TypeORM removal, optional /data)", url: "https://github.com/immich-app/immich/releases/tag/v1.137.0", revision: "tag v1.137.0", mutable: true }
+E07: { title: "Docs: errors#typeorm-upgrade", url: "https://docs.immich.app/errors#typeorm-upgrade", revision: "docs/src/pages/errors.md @ 87ef8950", mutable: true }
+E08: { title: "Docs: upgrading#migrating-to-vectorchord", url: "https://docs.immich.app/install/upgrading#migrating-to-vectorchord", revision: "docs/docs/install/upgrading.md @ 87ef8950", mutable: true }
+E09: { title: "Docs: environment variables", url: "https://docs.immich.app/install/environment-variables", revision: "docs/docs/install/environment-variables.md @ 87ef8950", mutable: true }
+E10: { title: "Release v3.0.0 (drops pgvecto.rs)", url: "https://github.com/immich-app/immich/releases/tag/v3.0.0", revision: "tag v3.0.0", mutable: true }
+E11: { title: "Blog: v3 migration guide", url: "https://immich.app/blog/v3-migration", revision: "immich-app/static-pages @ 5801b598", mutable: true }
+E12: { title: "PR #28159 drop pgvecto.rs support", url: "https://github.com/immich-app/immich/pull/28159", revision: "merge 97c62136", mutable: false }
+E13: { title: "PR #27802 remove deprecated env variables", url: "https://github.com/immich-app/immich/pull/27802", revision: "merge 41d2d84b", mutable: false }
+E14: { title: "PR #28326 remove deprecated ML envs", url: "https://github.com/immich-app/immich/pull/28326", revision: "merge 8c8dc9d3", mutable: false }
+E15: { title: "PR #22185 ML availability checks", url: "https://github.com/immich-app/immich/pull/22185", revision: "merged 2025-09-19", mutable: false }
+E16: { title: "docker/docker-compose.yml and example.env @ main", url: "https://github.com/immich-app/immich/tree/main/docker", revision: "main @ 87ef8950", mutable: true }
+E17: { title: "Release v2.0.0 (no special steps)", url: "https://github.com/immich-app/immich/releases/tag/v2.0.0", revision: "tag v2.0.0", mutable: true }
+E18: { title: "Discussions labelled changelog:breaking-change", url: "https://github.com/immich-app/immich/discussions?discussions_q=label%3Achangelog%3Abreaking-change", revision: "31 results 2026-11-09", mutable: true }
+E19: { title: "Release v1.102.0 (DB_DATA_LOCATION opt-in)", url: "https://github.com/immich-app/immich/releases/tag/v1.102.0", revision: "tag v1.102.0", mutable: true }
+E20: { title: "Release v2.7.0 (known limitations, IMMICH_HELMET_FILE)", url: "https://github.com/immich-app/immich/releases/tag/v2.7.0", revision: "tag v2.7.0", mutable: true }
+E21: { title: "Server source: env.dto.ts / config.ts / config.repository.ts", url: "https://github.com/immich-app/immich/blob/v3.0.0/server/src/dtos/env.dto.ts", revision: "tags v2.7.5 and v3.0.0", mutable: false }
+E22: { title: "Server source: database.service.ts pgvecto.rs deprecation warning", url: "https://github.com/immich-app/immich/blob/v2.7.5/server/src/services/database.service.ts", revision: "tags v2.0.0 and v2.7.5", mutable: false }
+E23: { title: "ML source: main.py deprecated env warnings", url: "https://github.com/immich-app/immich/blob/v2.7.5/machine-learning/immich_ml/main.py", revision: "tags v2.0.0, v2.6.3, v2.7.5", mutable: false }
+E24: { title: "Release v1.132.0 (Valkey, not required)", url: "https://github.com/immich-app/immich/releases/tag/v1.132.0", revision: "tag v1.132.0", mutable: true }
+E25: { title: "Release v3.3.0 (MACHINE_LEARNING_MODEL_REVISION opt-in)", url: "https://github.com/immich-app/immich/releases/tag/v3.3.0", revision: "tag v3.3.0", mutable: true }

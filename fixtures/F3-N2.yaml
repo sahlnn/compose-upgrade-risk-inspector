@@ -1,0 +1,66 @@
+id: F3-N2
+family: F3
+current_version: v1.105.1
+target_version: v1.132.3
+expected_label: NOT_APPLICABLE
+evidence: [E04]
+evidence_strength: medium
+evidence_note: "Negative claim (no other direct-upgrade floor) rests on a keyword scan."
+rationale: >
+  The 1.107.2 floor applies only to targets >= v1.133.0. The target v1.132.3 is below that. A keyword
+  scan of all 324 release notes ("upgrading directly", "only supports upgrading", "upgrade to .* first",
+  "intermediate", "Invalid upgrade path") found no other floor. Residual risk: a floor worded
+  differently would not be caught by a keyword scan.
+expected_actions: []
+missing_inputs: []
+# Full-report answer key (Phase 1.1, findings added in 1.2): all six families, every finding with its rule,
+# label, services and UNKNOWN reason, every certain action key and the upgrade path. Authored from the
+# sources, then diffed against the engine (0 diffs). Evidence/remediation per rule: test/golden/rules.yaml.
+expected_report:
+  families:
+    F1: NOT_APPLICABLE
+    F2: ACTION_REQUIRED
+    F3: NOT_APPLICABLE
+    F4: NOT_APPLICABLE
+    F5: NOT_APPLICABLE
+    F6: NOT_APPLICABLE
+  action_keys:
+    - compose.ports:immich-server-2283
+    - compose.remove:start.sh-command
+  upgrade_path:
+    status: NO_KNOWN_STOP
+    stops: []
+    advisory_stops: []
+    open_risks: []
+  missing_tokens: []
+  unknown_rules: []
+  config_details: []
+  findings:
+    - rule: F2-118-start-sh-removed
+      label: ACTION_REQUIRED
+      services:
+        - immich-server
+    - rule: F2-118-port-alignment
+      label: ACTION_REQUIRED
+      services:
+        - immich-server
+files:
+  docker-compose.yml: |
+    services:
+      immich-server:
+        image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+        command: ['start.sh', 'immich']
+        volumes:
+          - ${UPLOAD_LOCATION}:/usr/src/app/upload
+        env_file: [.env]
+        ports: ['2283:3001']
+      database:
+        image: docker.io/tensorchord/pgvecto-rs:pg14-v0.2.0
+  .env: |
+    # SYNTHETIC - not a real deployment
+    UPLOAD_LOCATION=./library
+    DB_DATA_LOCATION=./postgres
+    IMMICH_VERSION=v1.105.1
+    DB_PASSWORD=synthetic-placeholder
+    DB_USERNAME=postgres
+    DB_DATABASE_NAME=immich

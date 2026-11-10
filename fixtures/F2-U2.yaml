@@ -1,0 +1,59 @@
+id: F2-U2
+family: F2
+current_version: v1.117.0
+target_version: v1.118.0
+expected_label: UNKNOWN
+evidence: [E02]
+evidence_strength: strong
+rationale: >
+  The range crosses the v1.118.0 port alignment. The port mapping is fully interpolated
+  ("${IMMICH_PUBLIC_PORT}:${IMMICH_INTERNAL_PORT}"), and neither variable is in .env (they
+  come from CI/shell). If IMMICH_INTERNAL_PORT=3001 the user must act; if 2283 they need not.
+expected_actions: ["Resolve IMMICH_INTERNAL_PORT and re-run"]
+missing_inputs: ["shell variables IMMICH_PUBLIC_PORT, IMMICH_INTERNAL_PORT"]
+# Full-report answer key (Phase 1.1, findings added in 1.2): all six families, every finding with its rule,
+# label, services and UNKNOWN reason, every certain action key and the upgrade path. Authored from the
+# sources, then diffed against the engine (0 diffs). Evidence/remediation per rule: test/golden/rules.yaml.
+expected_report:
+  families:
+    F1: NOT_APPLICABLE
+    F2: UNKNOWN
+    F3: NOT_APPLICABLE
+    F4: NOT_APPLICABLE
+    F5: NOT_APPLICABLE
+    F6: NOT_APPLICABLE
+  action_keys: []
+  upgrade_path:
+    status: NO_KNOWN_STOP
+    stops: []
+    advisory_stops: []
+    open_risks: []
+  missing_tokens:
+    - IMMICH_INTERNAL_PORT
+  unknown_rules: []
+  config_details: []
+  findings:
+    - rule: F2-118-port-alignment
+      label: UNKNOWN
+      services: []
+      why: IMMICH_INTERNAL_PORT
+files:
+  docker-compose.yml: |
+    services:
+      immich-server:
+        image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+        volumes:
+          - ${UPLOAD_LOCATION}:/usr/src/app/upload
+        env_file: [.env]
+        ports:
+          - "${IMMICH_PUBLIC_PORT}:${IMMICH_INTERNAL_PORT}"
+      database:
+        image: docker.io/tensorchord/pgvecto-rs:pg14-v0.2.0
+  .env: |
+    # SYNTHETIC - not a real deployment
+    UPLOAD_LOCATION=./library
+    DB_DATA_LOCATION=./postgres
+    IMMICH_VERSION=v1.117.0
+    DB_PASSWORD=synthetic-placeholder
+    DB_USERNAME=postgres
+    DB_DATABASE_NAME=immich

@@ -1,0 +1,30 @@
+Compose Upgrade Risk Inspector  (offline, read-only; no files are changed)
+Upgrade : v1.118.2 -> v1.119.0
+Result  : ACTION_REQUIRED
+          At least one supported rule requires a change or an intermediate upgrade before this upgrade.
+Read    : docker-compose.yml, .env
+Note    : no immich-machine-learning service in this compose; ML variables were not checked
+Note    : database service: database (host 'database' from DB_HOSTNAME default)
+Path    : NO_KNOWN_STOP: v1.118.2 -> v1.119.0
+
+F1 Environment variables....... ACTION_REQUIRED
+   !! [ACTION_REQUIRED] F1-119-host-renamed
+      action : Rename HOST to IMMICH_HOST.
+      config : request = v1.118.2 -> v1.119.0 crosses v1.119.0
+      config : immich-server.environment.HOST = (set)  (.env:8)
+      source : E03 <https://github.com/immich-app/immich/releases/tag/v1.119.0> (tag v1.119.0)
+   !! [ACTION_REQUIRED] F1-119-metrics-removed
+      action : Remove IMMICH_METRICS, IMMICH_API_METRICS, IMMICH_HOST_METRICS, IMMICH_IO_METRICS and IMMICH_JOB_METRICS and configure IMMICH_TELEMETRY_INCLUDE and IMMICH_TELEMETRY_EXCLUDE instead (see the cited source for the values).
+      config : request = v1.118.2 -> v1.119.0 crosses v1.119.0
+      config : immich-server.environment.IMMICH_METRICS = (set)  (.env:9)
+      config : immich-server.environment.IMMICH_HOST_METRICS = (set)  (.env:10)
+      source : E03 <https://github.com/immich-app/immich/releases/tag/v1.119.0> (tag v1.119.0)
+F2 Service architecture........ NOT_APPLICABLE
+F3 Direct-upgrade floor........ NOT_APPLICABLE
+F4 Intermediate migration...... NOT_APPLICABLE
+F5 PostgreSQL / VectorChord.... NOT_APPLICABLE
+F6 pgvecto.rs removal.......... NOT_APPLICABLE
+
+Summary : ACTION_REQUIRED 1 (F1) | UNKNOWN 0 | ADVISORY 0 | NOT_APPLICABLE 5 (F2,F3,F4,F5,F6)
+Coverage: families F1, F2, F3, F4, F5, F6. NOT_APPLICABLE: with complete inputs, no supported rule of that family matched. It is not a safety verdict.
+          Changes outside these six families (API, mobile app, hardware/CPU requirements, admin settings, data migrations) are not checked.

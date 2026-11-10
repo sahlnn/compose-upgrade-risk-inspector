@@ -1,0 +1,63 @@
+id: F1-N1
+family: F1
+current_version: v2.7.5
+target_version: v3.0.0
+expected_label: NOT_APPLICABLE
+evidence: [E11, E14]
+evidence_strength: strong
+rationale: >
+  The range crosses the v3.0.0 env removals, but the config already uses the new names
+  (MACHINE_LEARNING_PRELOAD__CLIP__TEXTUAL / __VISUAL). None of the three removed vars
+  (IMMICH_MACHINE_LEARNING_PING_TIMEOUT, MACHINE_LEARNING_PRELOAD__CLIP,
+  MACHINE_LEARNING_PRELOAD__FACIAL_RECOGNITION) appears as an exact key. All referenced env
+  files are present. Trap: a prefix/substring match on "MACHINE_LEARNING_PRELOAD__CLIP"
+  would wrongly flag this case.
+expected_actions: []
+missing_inputs: []
+# Full-report answer key (Phase 1.1, findings added in 1.2): all six families, every finding with its rule,
+# label, services and UNKNOWN reason, every certain action key and the upgrade path. Authored from the
+# sources, then diffed against the engine (0 diffs). Evidence/remediation per rule: test/golden/rules.yaml.
+expected_report:
+  families:
+    F1: NOT_APPLICABLE
+    F2: NOT_APPLICABLE
+    F3: NOT_APPLICABLE
+    F4: NOT_APPLICABLE
+    F5: NOT_APPLICABLE
+    F6: NOT_APPLICABLE
+  action_keys: []
+  upgrade_path:
+    status: NO_KNOWN_STOP
+    stops: []
+    advisory_stops: []
+    open_risks: []
+  missing_tokens: []
+  unknown_rules: []
+  config_details: []
+  findings: []
+files:
+  docker-compose.yml: |
+    name: immich
+    services:
+      immich-server:
+        image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+        volumes:
+          - ${UPLOAD_LOCATION}:/data
+        env_file: [.env]
+        ports: ['2283:2283']
+      immich-machine-learning:
+        image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}
+        env_file: [.env]
+        environment:
+          MACHINE_LEARNING_PRELOAD__CLIP__TEXTUAL: ViT-B-32__openai
+          MACHINE_LEARNING_PRELOAD__CLIP__VISUAL: ViT-B-32__openai
+      database:
+        image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0
+  .env: |
+    # SYNTHETIC - not a real deployment
+    UPLOAD_LOCATION=./library
+    DB_DATA_LOCATION=./postgres
+    IMMICH_VERSION=v2.7.5
+    DB_PASSWORD=synthetic-placeholder
+    DB_USERNAME=postgres
+    DB_DATABASE_NAME=immich

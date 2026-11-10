@@ -1,0 +1,67 @@
+id: F2-U1
+family: F2
+current_version: v1.117.0
+target_version: v1.118.0
+expected_label: UNKNOWN
+evidence: [E02]
+evidence_strength: strong
+rationale: >
+  The range crosses the v1.118.0 port alignment and start.sh removal. immich-server inherits
+  its definition via `extends` from immich-base.yml, which was not provided, so the effective
+  `ports` and `command` are unknown. The local file has no ports or command, but that does not
+  mean the base file has none.
+expected_actions: ["Provide immich-base.yml or the `docker compose config` output"]
+missing_inputs: ["immich-base.yml"]
+# Full-report answer key (Phase 1.1, findings added in 1.2): all six families, every finding with its rule,
+# label, services and UNKNOWN reason, every certain action key and the upgrade path. Authored from the
+# sources, then diffed against the engine (0 diffs). Evidence/remediation per rule: test/golden/rules.yaml.
+expected_report:
+  families:
+    F1: NOT_APPLICABLE
+    F2: UNKNOWN
+    F3: NOT_APPLICABLE
+    F4: NOT_APPLICABLE
+    F5: NOT_APPLICABLE
+    F6: NOT_APPLICABLE
+  action_keys: []
+  upgrade_path:
+    status: NO_KNOWN_STOP
+    stops: []
+    advisory_stops: []
+    open_risks: []
+  missing_tokens:
+    - immich-base.yml
+  unknown_rules: []
+  config_details: []
+  findings:
+    - rule: F2-118-start-sh-removed
+      label: UNKNOWN
+      services: []
+      why: immich-base.yml
+    - rule: F2-118-microservices-removed
+      label: UNKNOWN
+      services: []
+      why: immich-base.yml
+    - rule: F2-118-port-alignment
+      label: UNKNOWN
+      services: []
+      why: immich-base.yml
+files:
+  docker-compose.yml: |
+    services:
+      immich-server:
+        extends:
+          file: immich-base.yml
+          service: immich-server
+        image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+        env_file: [.env]
+      database:
+        image: docker.io/tensorchord/pgvecto-rs:pg14-v0.2.0
+  .env: |
+    # SYNTHETIC - not a real deployment
+    UPLOAD_LOCATION=./library
+    DB_DATA_LOCATION=./postgres
+    IMMICH_VERSION=v1.117.0
+    DB_PASSWORD=synthetic-placeholder
+    DB_USERNAME=postgres
+    DB_DATABASE_NAME=immich

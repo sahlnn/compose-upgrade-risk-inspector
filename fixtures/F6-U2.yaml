@@ -1,0 +1,74 @@
+id: F6-U2
+family: F6
+current_version: v2.7.5
+target_version: v3.0.0
+expected_label: UNKNOWN
+evidence: [E11, E21]
+evidence_strength: strong
+rationale: >
+  immich-server loads `.env` and `secrets/db.env`. Only `.env` was provided, and it has no
+  DB_VECTOR_EXTENSION, but the missing db.env (where DB_* vars usually live) might set
+  DB_VECTOR_EXTENSION=pgvecto.rs. A partial env set cannot prove the variable is absent.
+expected_actions: ["Provide secrets/db.env with secret values redacted"]
+missing_inputs: ["secrets/db.env"]
+# Full-report answer key (Phase 1.1, findings added in 1.2): all six families, every finding with its rule,
+# label, services and UNKNOWN reason, every certain action key and the upgrade path. Authored from the
+# sources, then diffed against the engine (0 diffs). Evidence/remediation per rule: test/golden/rules.yaml.
+expected_report:
+  families:
+    F1: UNKNOWN
+    F2: NOT_APPLICABLE
+    F3: NOT_APPLICABLE
+    F4: NOT_APPLICABLE
+    F5: UNKNOWN
+    F6: UNKNOWN
+  action_keys: []
+  upgrade_path:
+    status: NO_KNOWN_STOP
+    stops: []
+    advisory_stops: []
+    open_risks: []
+  missing_tokens:
+    - secrets/db.env
+  unknown_rules: []
+  config_details: []
+  findings:
+    - rule: F1-300-ping-timeout-removed
+      label: UNKNOWN
+      services: []
+      why: secrets/db.env
+    - rule: F5-300-no-supported-extension
+      label: UNKNOWN
+      services: []
+      why: secrets/db.env
+    - rule: F6-300-env-pgvectors-rejected
+      label: UNKNOWN
+      services: []
+      why: secrets/db.env
+    - rule: F6-300-legacy-vectors-command
+      label: UNKNOWN
+      services: []
+      why: secrets/db.env
+files:
+  docker-compose.yml: |
+    name: immich
+    services:
+      immich-server:
+        image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+        volumes:
+          - ${UPLOAD_LOCATION}:/data
+        env_file:
+          - .env
+          - secrets/db.env
+        ports: ['2283:2283']
+      database:
+        image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0
+        env_file:
+          - secrets/db.env
+        volumes:
+          - ${DB_DATA_LOCATION}:/var/lib/postgresql/data
+  .env: |
+    # SYNTHETIC - not a real deployment
+    UPLOAD_LOCATION=./library
+    DB_DATA_LOCATION=./postgres
+    IMMICH_VERSION=v2.7.5
