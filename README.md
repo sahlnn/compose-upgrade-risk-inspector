@@ -69,7 +69,7 @@ It reads `compose.yaml` / `docker-compose.yml`, the project `.env` (for interpol
 
 ## Quick start
 
-Requirements: Node.js. The package declares `>=20`, but the test suite has only been run on Node.js 24.
+Requirements: Node.js. The package declares `>=20`, but the test suite has only been run on Node.js 24 (locally on Windows, and in CI on Ubuntu and Windows). It has not been run on Node.js 20/22 or on macOS.
 
 ```bash
 npm ci
@@ -204,11 +204,11 @@ npm run score -- --evidence <output-dir>
 
 | Kind | What it is | Status |
 |---|---|---|
-| Regression and unit tests | `node --test`: unit, negative, isolation, per-rule golden checks, security/output-boundary tests, post-review regressions, example reproduction | Run locally on Windows with Node.js 24; see [docs/testing.md](docs/testing.md) for the exact counts and the one platform skip |
+| Regression and unit tests | `node --test`: unit, negative, isolation, per-rule golden checks, security/output-boundary tests, post-review regressions, example reproduction | GitHub Actions, Node.js 24.22.2: 179/179 passed on Ubuntu and on Windows; locally on Windows, 178 passed and 1 skipped (a symlink permission). See [docs/testing.md](docs/testing.md) |
 | Development set | 41 synthetic cases with hand-written answer keys, scored on the full report | 41/41, written by the same author as the rules. **Not a real-world accuracy measure.** |
 | Mutation testing | `npm run mutate` injects one defect at a time into a temp copy and runs the suite | See [docs/testing.md](docs/testing.md) for which runs were full and which targeted |
 | Independent AI code review | Several review rounds with Codex | See below |
-| CI | [.github/workflows/ci.yml](.github/workflows/ci.yml): Ubuntu and Windows, Node.js 24 | Prepared; **not yet run on GitHub Actions** |
+| CI | [.github/workflows/ci.yml](.github/workflows/ci.yml): Ubuntu and Windows, Node.js 24 | First run (2026-11-10) passed on both: tests, lint and fixture validation. Not run on Node.js 20/22 or macOS |
 | Production validation | — | **Not performed** |
 
 ## Known limitations

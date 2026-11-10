@@ -31,4 +31,4 @@ This is a research and portfolio prototype. It is **not** validated for producti
 
 ## Verification limits
 - **Accuracy.** The 41 development cases, their answer keys, the rules and the regression tests were all written by the same author. 41/41 on that set says nothing about real-world accuracy. An earlier independently authored blind evaluation informed v0.2; its cases have since been exposed and are not used as evidence.
-- **Platform coverage.** The test suite has been run locally on Windows with Node.js 24 only. The prepared CI workflow (Ubuntu and Windows, Node.js 24) has not run yet. Node.js 20 and 22 are declared but untested. One test (a Windows file symlink check) is skipped without elevated rights.
+- **Platform coverage.** The test suite has been run on Node.js 24 only: locally on Windows, and in GitHub Actions on Ubuntu and Windows (Node.js 24.22.2, all 179 tests passed on both). Node.js 20 and 22 are declared in `package.json` but untested, and macOS has not been tested. Locally, one test (a file symlink check) is skipped without elevated rights; it passed on both CI runners.
